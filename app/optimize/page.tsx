@@ -3,27 +3,33 @@
 import { IterateDialog } from "@/components/iterate-dialog"
 import { Button } from "@/components/ui/button"
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "@/components/ui/use-toast"
 import { callDeepseek, callGemini, callGeminiFlash } from "@/lib/api"
+import { getLocalStorage, setLocalStorage } from '@/lib/utils'
 import type { OptimizedPrompt, TestResult } from '@/types/prompt'
 import { ArrowRightIcon, Check, CopyIcon, Loader2, Play, Sparkles, Zap } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 export default function OptimizePage() {
-  const [promptHistory, setPromptHistory] = useState<OptimizedPrompt[]>(() => {
-    const saved = localStorage.getItem('optimizedPrompt')
+  const [promptHistory, setPromptHistory] = useState<OptimizedPrompt[]>([])
+  
+  useEffect(() => {
+    const saved = getLocalStorage('optimizedPrompt')
     if (saved) {
-      return [JSON.parse(saved)]
+      try {
+        setPromptHistory([JSON.parse(saved)])
+      } catch (error) {
+        console.error('Error parsing saved prompt:', error)
+      }
     }
-    return []
-  })
+  }, [])
   
   const [currentVersion, setCurrentVersion] = useState(1)
   
@@ -41,6 +47,11 @@ export default function OptimizePage() {
   const [isIterateDialogOpen, setIsIterateDialogOpen] = useState(false)
   const [editedContent, setEditedContent] = useState("")
   const [isOptimizing, setIsOptimizing] = useState(false)
+
+  const saveHistory = (history: OptimizedPrompt[]) => {
+    setPromptHistory(history)
+    setLocalStorage('optimizedPromptHistory', JSON.stringify(history))
+  }
 
   const handleTest = async () => {
     try {
@@ -117,11 +128,9 @@ ${feedback}
       }
 
       const newHistory = [...promptHistory, newVersion]
-      setPromptHistory(newHistory)
+      saveHistory(newHistory)
       setCurrentVersion(newVersion.version)
       setIsIterateDialogOpen(false)
-
-      localStorage.setItem('optimizedPromptHistory', JSON.stringify(newHistory))
 
       toast({
         title: "迭代成功",

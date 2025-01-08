@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { toast } from "@/components/ui/use-toast"
 import { callDeepseek, callGemini, callGeminiFlash } from "@/lib/api"
+import { getLocalStorage, setLocalStorage } from '@/lib/utils'
 import { ArrowRight, Zap } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
@@ -27,7 +28,7 @@ export default function Home() {
       return
     }
 
-    const apiKey = localStorage.getItem(
+    const apiKey = getLocalStorage(
       model === "deepseek-v3" ? "deepseek-key" : "gemini-key"
     )
 
@@ -128,8 +129,8 @@ ${prompt}`
           result = await callGemini(systemPrompt, "")
       }
 
-      // 直接存储完整的返回结果
-      localStorage.setItem('optimizedPrompt', JSON.stringify({
+      // 使用安全的 localStorage 函数
+      setLocalStorage('optimizedPrompt', JSON.stringify({
         content: result,
         originalPrompt: prompt,
         version: 1
